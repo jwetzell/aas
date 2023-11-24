@@ -24,6 +24,7 @@ if (!options.device) {
 }
 
 let ws;
+let updateTimeout;
 if (options.websocket) {
   ws = new WebSocketServer({ port: options.websocket });
 }
@@ -52,7 +53,14 @@ port.on('data', (data) => {
   if (aasConsole) {
     try {
       aasConsole.update(data);
-      console.log('app: console data updated');
+      console.log('app: console state update received');
+      if (updateTimeout) {
+        clearTimeout(updateTimeout);
+      }
+      updateTimeout = setTimeout(() => {
+        console.log('app: console update timed out re-initializing');
+        aasConsole.reset();
+      }, 1000);
       if (ws) {
         sendToWSClients({
           eventName: 'update',
@@ -74,9 +82,9 @@ port.on('data', (data) => {
   }
 });
 
-const initializeInterval = setInterval(function initialize() {
+const initializeInterval = setInterval(() => {
   if (aasConsole.sportInitialized) {
-    clearInterval(this);
+    console.log('app: console is already initialized');
   } else if (port) {
     console.log('app: requesting console data to start streaming');
     port.write(Packets.START_LIVE);
