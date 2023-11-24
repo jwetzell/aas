@@ -34,17 +34,34 @@ port.on('error', (error) => {
 // Switches the port into "flowing mode"
 port.on('data', (data) => {
   if (aasConsole) {
-    aasConsole.update(data);
+    try {
+      aasConsole.update(data);
+      console.log('app: console data updated');
+    } catch (error) {
+      console.error('app: error updating console state');
+    }
     if (options.output) {
-      writeFileSync(options.output, JSON.stringify(aasConsole, null, 2));
+      try {
+        writeFileSync(options.output, JSON.stringify(aasConsole, null, 2));
+      } catch (error) {
+        console.error(`app: problem writing to output file -> ${options.output}`);
+      }
     }
   }
 });
 
-port.write(Packets.START_LIVE);
+const initializeInterval = setInterval(function initialize() {
+  if (aasConsole.sportInitialized) {
+    clearInterval(this);
+  } else if (port) {
+    console.log('app: requesting console data to start streaming');
+    port.write(Packets.START_LIVE);
+  }
+}, 1000);
 
 process.on('SIGINT', () => {
   console.log('app: shutting down');
+  clearInterval(initializeInterval);
   port.write(Packets.STOP_LIVE);
   port.close();
 });
