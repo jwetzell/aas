@@ -3,6 +3,12 @@ class Console {
     this.sportInitialized = false;
   }
 
+  reset() {
+    this.sportInitialized = false;
+    delete this.sport;
+    delete this.state;
+  }
+
   /**
    *
    * @param {Buffer} buffer
