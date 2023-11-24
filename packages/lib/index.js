@@ -18,7 +18,8 @@ class Console {
         throw new Error('Football is not implemented');
       case 0x70:
         this.sport = 'volleyball';
-        throw new Error('Volleyball is not implemented');
+        this.parseVolleyball(buffer);
+        break;
       case 0x71:
         this.sport = 'baseball';
         throw new Error('Baseball is not implemented');
@@ -34,6 +35,51 @@ class Console {
       default:
         console.log(`unidentified sport data: ${buffer.toString('hex')}`);
         break;
+    }
+  }
+
+  /**
+   *
+   * @param {Buffer} buffer
+   */
+  parseVolleyball(buffer) {
+    const bufferHex = buffer.toString('hex');
+    if (!this.sportInitialized) {
+      this.time = {};
+
+      this.home = {};
+
+      this.guest = {};
+      this.sportInitialized = true;
+    }
+
+    this.time.minutes = bufferHex.substring(10, 12);
+    this.time.seconds = bufferHex.substring(12, 14);
+    this.time.tenths = bufferHex.substring(15, 16);
+
+    this.time.showTenths = bufferHex.at(8) === '1';
+    this.time.display = `${this.time.minutes}:${this.time.seconds}`;
+
+    const seqNum = bufferHex.substring(20, 22);
+    if (seqNum === '11') {
+      const homeBinaryInfo = buffer.at(12).toString(2).padStart(8, '0');
+      const guestBinaryInfo = buffer.at(14).toString(2).padStart(8, '0');
+
+      this.home.score = parseInt(bufferHex.substring(22, 24), 10);
+      if (homeBinaryInfo[0] === '1') {
+        this.home.score += 100;
+      }
+      this.guest.score = parseInt(bufferHex.substring(26, 28), 10);
+      if (guestBinaryInfo[0] === '1') {
+        this.guest.score += 100;
+      }
+
+      this.home.serve = homeBinaryInfo[7] === '1';
+      this.guest.serve = guestBinaryInfo[7] === '1';
+
+      this.home.gamesWon = parseInt(buffer.subarray(16, 17).toString('hex'), 10);
+      this.guest.gamesWon = parseInt(buffer.subarray(17, 18).toString('hex'), 10);
+      this.game = parseInt(bufferHex.substring(31, 32), 10);
     }
   }
 
