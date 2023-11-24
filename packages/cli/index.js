@@ -6,7 +6,7 @@ const { writeFileSync } = require('fs');
 const { program, Option } = require('commander');
 const { WebSocketServer } = require('ws');
 const { XMLBuilder } = require('fast-xml-parser');
-
+const { stringify: yamlify } = require('yaml');
 const packageInfo = require('./package.json');
 
 program.name(packageInfo.name);
@@ -14,7 +14,7 @@ program.version(packageInfo.version);
 program.description('Simple protocol router /s');
 program.option('-d, --device <serial port path>', 'serialport path');
 program.option('-o, --output <output file>', 'file to write console info to');
-program.addOption(new Option('-f, --format <output format>').choices(['json', 'xml']).default('json'));
+program.addOption(new Option('-f, --format <output format>').choices(['json', 'xml', 'yaml']).default('json'));
 program.option('--websocket <port>', 'enable websocket server for updates', undefined);
 program.parse(process.argv);
 
@@ -84,6 +84,8 @@ port.on('data', (data) => {
             xmlBuilder = new XMLBuilder();
           }
           outputString = xmlBuilder.build({ console: aasConsole.toJSON() });
+        } else if (options.format === 'yaml') {
+          outputString = yamlify(aasConsole.toJSON());
         }
         if (outputString) {
           writeFileSync(options.output, outputString);
