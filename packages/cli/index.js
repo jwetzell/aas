@@ -4,6 +4,7 @@ const { SerialPort } = require('serialport');
 const { Console, Packets } = require('aas-lib');
 const { writeFileSync } = require('fs');
 const { program, Option } = require('commander');
+const { WebSocketServer } = require('ws');
 
 const packageInfo = require('./package.json');
 
@@ -13,6 +14,7 @@ program.description('Simple protocol router /s');
 program.option('-d, --device <serial port path>', 'serialport path');
 program.option('-o, --output <output file>', 'file to write console info to');
 program.addOption(new Option('-f, --format <output format>').choices(['json']).default('json'));
+program.option('--websocket <port>', 'enable websocket server for updates', undefined);
 program.parse(process.argv);
 
 const options = program.opts();
@@ -21,11 +23,24 @@ if (!options.device) {
   process.exit(1);
 }
 
+let ws;
+if (options.websocket) {
+  ws = new WebSocketServer({ port: options.websocket });
+}
+
 const aasConsole = new Console();
 const port = new SerialPort({
   path: options.device,
   baudRate: 76800,
 });
+
+function sendToWSClients(payload) {
+  if (ws && ws.clients) {
+    ws.clients.forEach((socket) => {
+      socket.send(JSON.stringify(payload));
+    });
+  }
+}
 
 port.on('error', (error) => {
   console.error('app: problem with serial port');
@@ -38,6 +53,12 @@ port.on('data', (data) => {
     try {
       aasConsole.update(data);
       console.log('app: console data updated');
+      if (ws) {
+        sendToWSClients({
+          eventName: 'update',
+          data: aasConsole.toJSON(),
+        });
+      }
     } catch (error) {
       console.error('app: error updating console state');
     }
@@ -59,12 +80,23 @@ const initializeInterval = setInterval(function initialize() {
   } else if (port) {
     console.log('app: requesting console data to start streaming');
     port.write(Packets.START_LIVE);
+    if (ws) {
+      sendToWSClients({ eventName: 'initializing' });
+    }
   }
 }, 1000);
 
 process.on('SIGINT', () => {
   console.log('app: shutting down');
   clearInterval(initializeInterval);
+  if (ws) {
+    if (ws.clients) {
+      ws.clients.forEach((socket) => {
+        socket.close();
+      });
+    }
+    ws.close();
+  }
   port.write(Packets.STOP_LIVE);
   port.close();
 });
