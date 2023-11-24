@@ -3,7 +3,7 @@
 const { SerialPort } = require('serialport');
 const { Console, Packets } = require('aas-lib');
 const { writeFileSync } = require('fs');
-const { program } = require('commander');
+const { program, Option } = require('commander');
 
 const packageInfo = require('./package.json');
 
@@ -12,6 +12,7 @@ program.version(packageInfo.version);
 program.description('Simple protocol router /s');
 program.option('-d, --device <serial port path>', 'serialport path');
 program.option('-o, --output <output file>', 'file to write console info to');
+program.addOption(new Option('-f, --format <output format>').choices(['json']).default('json'));
 program.parse(process.argv);
 
 const options = program.opts();
@@ -42,7 +43,9 @@ port.on('data', (data) => {
     }
     if (options.output) {
       try {
-        writeFileSync(options.output, JSON.stringify(aasConsole, null, 2));
+        if (options.format === 'json') {
+          writeFileSync(options.output, JSON.stringify(aasConsole, null, 2));
+        }
       } catch (error) {
         console.error(`app: problem writing to output file -> ${options.output}`);
       }
