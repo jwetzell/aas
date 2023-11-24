@@ -165,6 +165,9 @@ class Console {
     this.state.time.showTenths = bufferHex.at(8) === '1';
     this.state.time.display = `${this.state.time.minutes}:${this.state.time.seconds}`;
 
+    const hornBinaryFlags = buffer.at(4).toString(2).padStart(8, '0');
+    this.state.horn = hornBinaryFlags[0] === '1';
+
     const seqNum = bufferHex.substring(20, 22);
     if (seqNum === '11') {
       const homeBinaryInfo = buffer.at(12).toString(2).padStart(8, '0');
@@ -245,6 +248,9 @@ class Console {
 
     this.state.playClock.seconds = bufferHex.substring(16, 18);
 
+    const hornBinaryFlags = buffer.at(4).toString(2).padStart(8, '0');
+    this.state.horn = hornBinaryFlags[0] === '1';
+
     const seqNum = bufferHex.substring(20, 22);
     if (seqNum === '11') {
       const homeBinaryInfo = buffer.at(12).toString(2).padStart(8, '0');
@@ -293,6 +299,9 @@ class Console {
 
     this.state.time.showTenths = bufferHex.at(8) === '1';
     this.state.time.display = `${this.state.time.minutes}:${this.state.time.seconds}`;
+
+    const hornBinaryFlags = buffer.at(4).toString(2).padStart(8, '0');
+    this.state.horn = hornBinaryFlags[0] === '1';
 
     const seqNum = bufferHex.substring(20, 22);
     if (seqNum === '11') {
@@ -361,6 +370,8 @@ class Console {
     this.state.shotClock.display = `${this.state.shotClock.seconds}.${this.state.shotClock.tenths}`;
 
     const seqNum = bufferHex.substring(20, 22);
+    const hornBinaryFlags = buffer.at(4).toString(2).padStart(8, '0');
+    this.state.horn = hornBinaryFlags[0] === '1';
     if (seqNum === '11') {
       const homeBinaryInfo = buffer.at(12).toString(2).padStart(8, '0');
       const guestBinaryInfo = buffer.at(14).toString(2).padStart(8, '0');
@@ -391,6 +402,8 @@ class Console {
 
       this.state.period = parseInt(bufferHex.substring(31, 32), 10);
     }
+
+    // TODO(jwetzell): decode player stats in seqNum >= 22
   }
 
   toJSON() {
