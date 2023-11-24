@@ -70,7 +70,7 @@ port.on('data', (data) => {
     } catch (error) {
       console.error('app: error updating console state');
     }
-    if (options.output) {
+    if (options.output && aasConsole.sportInitialized) {
       try {
         if (options.format === 'json') {
           writeFileSync(options.output, JSON.stringify(aasConsole, null, 2));
