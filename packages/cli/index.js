@@ -11,6 +11,7 @@ program.name(packageInfo.name);
 program.version(packageInfo.version);
 program.description('Simple protocol router /s');
 program.option('-d, --device <serial port path>', 'serialport path');
+program.option('-o, --output <output file>', 'file to write console info to');
 program.parse(process.argv);
 
 const options = program.opts();
@@ -34,7 +35,9 @@ port.on('error', (error) => {
 port.on('data', (data) => {
   if (aasConsole) {
     aasConsole.update(data);
-    writeFileSync('aa.json', JSON.stringify(aasConsole, null, 2));
+    if (options.output) {
+      writeFileSync(options.output, JSON.stringify(aasConsole, null, 2));
+    }
   }
 });
 
