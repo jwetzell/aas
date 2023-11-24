@@ -96,7 +96,7 @@ class Console {
     if (!this.sportInitialized) {
       this.time = {};
 
-      this.shotclock = {};
+      this.shotClock = {};
 
       this.home = {};
 
@@ -115,17 +115,17 @@ class Console {
       this.time.display += `.${this.time.tenths}`;
     }
 
-    this.shotclock.seconds = bufferHex.substring(16, 18);
-    if (this.shotclock.seconds === 'aa') {
-      this.shotclock.seconds = '00';
+    this.shotClock.seconds = bufferHex.substring(16, 18);
+    if (this.shotClock.seconds === 'aa') {
+      this.shotClock.seconds = '00';
     }
 
-    this.shotclock.tenths = bufferHex.substring(19, 20);
-    if (this.shotclock.tenths === 'a') {
-      this.shotclock.tenths = '0';
+    this.shotClock.tenths = bufferHex.substring(19, 20);
+    if (this.shotClock.tenths === 'a') {
+      this.shotClock.tenths = '0';
     }
 
-    this.shotclock.display = `${this.shotclock.seconds}.${this.shotclock.tenths}`;
+    this.shotClock.display = `${this.shotClock.seconds}.${this.shotClock.tenths}`;
 
     const seqNum = bufferHex.substring(20, 22);
     if (seqNum === '11') {
