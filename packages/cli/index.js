@@ -111,6 +111,7 @@ const initializeInterval = setInterval(() => {
 
 process.on('SIGINT', () => {
   console.log('app: shutting down');
+  clearTimeout(updateTimeout);
   clearInterval(initializeInterval);
   if (ws) {
     if (ws.clients) {
