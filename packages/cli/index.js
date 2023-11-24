@@ -5,6 +5,7 @@ const { Console, Packets } = require('aas-lib');
 const { writeFileSync } = require('fs');
 const { program, Option } = require('commander');
 const { WebSocketServer } = require('ws');
+const { XMLBuilder } = require('fast-xml-parser');
 
 const packageInfo = require('./package.json');
 
@@ -13,7 +14,7 @@ program.version(packageInfo.version);
 program.description('Simple protocol router /s');
 program.option('-d, --device <serial port path>', 'serialport path');
 program.option('-o, --output <output file>', 'file to write console info to');
-program.addOption(new Option('-f, --format <output format>').choices(['json']).default('json'));
+program.addOption(new Option('-f, --format <output format>').choices(['json', 'xml']).default('json'));
 program.option('--websocket <port>', 'enable websocket server for updates', undefined);
 program.parse(process.argv);
 
@@ -25,6 +26,9 @@ if (!options.device) {
 
 let ws;
 let updateTimeout;
+
+let xmlBuilder;
+
 if (options.websocket) {
   ws = new WebSocketServer({ port: options.websocket });
 }
@@ -72,8 +76,17 @@ port.on('data', (data) => {
     }
     if (options.output && aasConsole.sportInitialized) {
       try {
+        let outputString;
         if (options.format === 'json') {
-          writeFileSync(options.output, JSON.stringify(aasConsole, null, 2));
+          outputString = JSON.stringify(aasConsole, null, 2);
+        } else if (options.format === 'xml') {
+          if (!xmlBuilder) {
+            xmlBuilder = new XMLBuilder();
+          }
+          outputString = xmlBuilder.build({ console: aasConsole.toJSON() });
+        }
+        if (outputString) {
+          writeFileSync(options.output, outputString);
         }
       } catch (error) {
         console.error(`app: problem writing to output file -> ${options.output}`);
