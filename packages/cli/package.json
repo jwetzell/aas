@@ -5,7 +5,9 @@
   "main": "index.js",
   "bin": "index.js",
   "scripts": {
-    "start": "node index.js"
+    "start": "node index.js",
+    "prebuild": "rimraf dist",
+    "build": "pkg ."
   },
   "keywords": [],
   "author": "",
@@ -14,5 +16,20 @@
     "aas-lib": "^0.1.0",
     "commander": "^11.1.0",
     "serialport": "^12.0.0"
+  },
+  "devDependencies": {
+    "pkg": "^5.8.1",
+    "rimraf": "^5.0.5"
+  },
+  "pkg": {
+    "assets": [
+      "../../**/node_modules/@serialport/**/*.node"
+    ],
+    "targets": [
+      "node18-linux-x64",
+      "node18-macos-x64",
+      "node18-win-x64"
+    ],
+    "outputPath": "dist"
   }
 }

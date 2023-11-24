@@ -4,6 +4,7 @@ const { SerialPort } = require('serialport');
 const { Console, Packets } = require('aas-lib');
 const { writeFileSync } = require('fs');
 const { program } = require('commander');
+
 const packageInfo = require('./package.json');
 
 program.name(packageInfo.name);
