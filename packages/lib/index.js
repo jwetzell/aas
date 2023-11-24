@@ -79,6 +79,10 @@ class Console {
 
       this.home.gamesWon = parseInt(buffer.subarray(16, 17).toString('hex'), 10);
       this.guest.gamesWon = parseInt(buffer.subarray(17, 18).toString('hex'), 10);
+
+      this.home.timeouts = parseInt(bufferHex.substring(40, 41), 10);
+      this.guest.timeouts = parseInt(bufferHex.substring(41, 42), 10);
+
       this.game = parseInt(bufferHex.substring(31, 32), 10);
     }
   }
