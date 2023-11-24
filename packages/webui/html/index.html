@@ -1,0 +1,56 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <link href="assets/css/tailwind.css" rel="stylesheet" />
+    <title>AAS Console</title>
+  </head>
+  <body>
+    <div class="absolute top-2 left-2 rounded-full hidden bg-green-300 w-3 h-3" id="status"></div>
+    <div class="hidden w-full justify-around" id="scoreboard">
+      <div class="flex flex-col items-center">
+        <div>Home</div>
+        <div id="home_score"></div>
+      </div>
+      <div id="clock"></div>
+      <div class="flex flex-col items-center">
+        <div>Guest</div>
+        <div id="guest_score"></div>
+      </div>
+    </div>
+    <div id="initializing" class="w-screen h-screen flex justify-center items-center">
+      <div>initializing</div>
+    </div>
+    <script>
+      const socket = new WebSocket(`ws://localhost:8080`);
+      let statusTimeout;
+
+      socket.onmessage = (message) => {
+        const msgObj = JSON.parse(message.data);
+        console.log(msgObj);
+        if (msgObj.eventName === 'update') {
+          document.getElementById('status').classList.remove('hidden');
+
+          if (statusTimeout) {
+            console.log('cancelling existing timeout');
+            clearTimeout(statusTimeout);
+          }
+          statusTimeout = setTimeout(() => {
+            document.getElementById('status').classList.add('hidden');
+          }, 100);
+          document.getElementById('scoreboard').classList.remove('hidden');
+          document.getElementById('scoreboard').classList.add('flex');
+          document.getElementById('initializing').classList.add('hidden');
+
+          document.getElementById('clock').innerHTML = msgObj.data.time.display;
+          document.getElementById('home_score').innerHTML = msgObj.data.home.score;
+          document.getElementById('guest_score').innerHTML = msgObj.data.guest.score;
+        } else if (msgObj.eventName === 'initializing') {
+          document.getElementById('scoreboard').classList.add('hidden');
+          document.getElementById('initializing').classList.remove('hidden');
+        }
+      };
+    </script>
+  </body>
+</html>

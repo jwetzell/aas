@@ -1,0 +1,19 @@
+{
+  "name": "aas-webui",
+  "version": "0.1.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "prestart": "tailwindcss -i tailwind.css -o ./html/assets/css/tailwind.css",
+    "start": "node index.js",
+    "dev:css": "tailwindcss -i tailwind.css -o ./html/assets/css/tailwind.css --watch"
+  },
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "express": "^4.18.2"
+  },
+  "devDependencies": {
+    "tailwindcss": "^3.3.5"
+  }
+}
