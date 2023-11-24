@@ -23,7 +23,8 @@ class Console {
         break;
       case 0x71:
         this.sport = 'baseball';
-        throw new Error('Baseball is not implemented');
+        this.parseBaseball(buffer);
+        break;
       case 0x16:
         this.sport = 'soccer';
         throw new Error('Soccer is not implemented');
@@ -36,6 +37,174 @@ class Console {
       default:
         console.log(`unidentified sport data: ${buffer.toString('hex')}`);
         break;
+    }
+  }
+
+  /**
+   *
+   * @param {Buffer} buffer
+   */
+  parseBaseball(buffer) {
+    if (!this.sportInitialized) {
+      this.time = {};
+
+      this.home = {};
+
+      this.guest = {};
+      this.bases = {};
+      this.innings = {
+        1: {
+          home: {
+            score: 0,
+          },
+          guest: {
+            score: 0,
+          },
+        },
+
+        2: {
+          home: {
+            score: 0,
+          },
+          guest: {
+            score: 0,
+          },
+        },
+
+        3: {
+          home: {
+            score: 0,
+          },
+          guest: {
+            score: 0,
+          },
+        },
+
+        4: {
+          home: {
+            score: 0,
+          },
+          guest: {
+            score: 0,
+          },
+        },
+
+        5: {
+          home: {
+            score: 0,
+          },
+          guest: {
+            score: 0,
+          },
+        },
+
+        6: {
+          home: {
+            score: 0,
+          },
+          guest: {
+            score: 0,
+          },
+        },
+
+        7: {
+          home: {
+            score: 0,
+          },
+          guest: {
+            score: 0,
+          },
+        },
+
+        8: {
+          home: {
+            score: 0,
+          },
+          guest: {
+            score: 0,
+          },
+        },
+
+        9: {
+          home: {
+            score: 0,
+          },
+          guest: {
+            score: 0,
+          },
+        },
+
+        10: {
+          home: {
+            score: 0,
+          },
+          guest: {
+            score: 0,
+          },
+        },
+      };
+      this.sportInitialized = true;
+    }
+
+    const bufferHex = buffer.toString('hex');
+
+    this.time.minutes = buffer.subarray(5, 6).toString('hex');
+    this.time.seconds = buffer.subarray(6, 7).toString('hex');
+    this.time.tenths = bufferHex.substring(15, 16);
+
+    this.time.showTenths = bufferHex.at(8) === '1';
+    this.time.display = `${this.time.minutes}:${this.time.seconds}`;
+
+    const seqNum = bufferHex.substring(20, 22);
+    if (seqNum === '11') {
+      const homeBinaryInfo = buffer.at(12).toString(2).padStart(8, '0');
+      const guestBinaryInfo = buffer.at(14).toString(2).padStart(8, '0');
+
+      this.home.score = parseInt(bufferHex.substring(22, 24), 10);
+      if (homeBinaryInfo[0] === '1') {
+        this.home.score += 100;
+      }
+      this.guest.score = parseInt(bufferHex.substring(26, 28), 10);
+      if (guestBinaryInfo[0] === '1') {
+        this.guest.score += 100;
+      }
+
+      this.guest.hits = parseInt(buffer.subarray(23, 24).toString('hex'), 10);
+      this.home.hits = parseInt(buffer.subarray(22, 23).toString('hex'), 10);
+
+      this.batter = buffer.subarray(21, 22).toString('hex');
+      if (this.batter === 'aa') {
+        this.batter = '';
+      }
+      this.home.pitcher = parseInt(buffer.subarray(26, 27).toString('hex'), 10);
+      this.guest.pitcher = parseInt(buffer.subarray(24, 25).toString('hex'), 10);
+      const baseBinaryInfo = buffer.at(19).toString(2).padStart(8, '0');
+
+      this.bases.first = baseBinaryInfo[3] === '1';
+      this.bases.second = baseBinaryInfo[2] === '1';
+      this.bases.third = baseBinaryInfo[1] === '1';
+
+      this.outs = parseInt(bufferHex.substring(37, 38), 10);
+      this.strikes = parseInt(bufferHex.substring(36, 37), 10);
+      this.balls = parseInt(bufferHex.substring(39, 40), 10);
+      const binaryFlags = buffer.at(12).toString(2).padStart(8, '0');
+      this.hit = binaryFlags[4] === '1';
+    } else if (seqNum === '22') {
+      const guestInningStartIndex = 11;
+      const homeInningStartIndex = 21;
+
+      for (let i = 0; i < 10; i += 1) {
+        const guestInningScore = buffer
+          .subarray(guestInningStartIndex + i, guestInningStartIndex + i + 1)
+          .toString('hex');
+        if (guestInningScore !== '0a') {
+          this.innings[i + 1].guest.score = parseInt(guestInningScore, 10);
+        }
+        const homeInningScore = buffer.subarray(homeInningStartIndex + i, homeInningStartIndex + i + 1).toString('hex');
+        if (homeInningScore !== '0a') {
+          this.innings[i + 1].home.score = parseInt(homeInningScore, 10);
+        }
+      }
     }
   }
 
