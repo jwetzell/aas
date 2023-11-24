@@ -15,7 +15,8 @@ class Console {
         break;
       case 0x61:
         this.sport = 'football';
-        throw new Error('Football is not implemented');
+        this.parseFootball(buffer);
+        break;
       case 0x70:
         this.sport = 'volleyball';
         this.parseVolleyball(buffer);
@@ -35,6 +36,60 @@ class Console {
       default:
         console.log(`unidentified sport data: ${buffer.toString('hex')}`);
         break;
+    }
+  }
+
+  /**
+   *
+   * @param {Buffer} buffer
+   */
+  parseFootball(buffer) {
+    if (!this.sportInitialized) {
+      this.time = {};
+
+      this.playClock = {};
+
+      this.home = {};
+
+      this.guest = {};
+      this.sportInitialized = true;
+    }
+
+    const bufferHex = buffer.toString('hex');
+
+    this.time.minutes = buffer.subarray(5, 6).toString('hex');
+    this.time.seconds = buffer.subarray(6, 7).toString('hex');
+    this.time.tenths = bufferHex.substring(15, 16);
+
+    this.time.showTenths = bufferHex.at(8) === '1';
+    this.time.display = `${this.time.minutes}:${this.time.seconds}`;
+
+    this.playClock.seconds = bufferHex.substring(16, 18);
+
+    const seqNum = bufferHex.substring(20, 22);
+    if (seqNum === '11') {
+      const homeBinaryInfo = buffer.at(12).toString(2).padStart(8, '0');
+      const guestBinaryInfo = buffer.at(14).toString(2).padStart(8, '0');
+
+      this.home.score = parseInt(bufferHex.substring(22, 24), 10);
+      if (homeBinaryInfo[0] === '1') {
+        this.home.score += 100;
+      }
+      this.guest.score = parseInt(bufferHex.substring(26, 28), 10);
+      if (guestBinaryInfo[0] === '1') {
+        this.guest.score += 100;
+      }
+
+      this.home.poss = homeBinaryInfo[7] === '1';
+      this.guest.poss = guestBinaryInfo[7] === '1';
+
+      this.home.timeouts = parseInt(bufferHex.substring(40, 41), 10);
+      this.guest.timeouts = parseInt(bufferHex.substring(41, 42), 10);
+
+      this.quarter = parseInt(bufferHex.substring(31, 32), 10);
+      this.down = parseInt(bufferHex.substring(39, 40), 10);
+      this.yardsToGo = parseInt(buffer.subarray(18, 19).toString('hex'), 10);
+      this.ballOn = parseInt(buffer.subarray(21, 22).toString('hex'), 10);
     }
   }
 
