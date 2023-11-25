@@ -3,9 +3,10 @@
 ### Supported Scoreboards
 - basketball (no stats)
 - volleyball
-- football
+- football (no stats)
 - baseball
 - wrestling
 - auto racing
 - soccer
 - hockey
+- track
