@@ -1,3 +1,4 @@
+/* eslint-disable no-bitwise */
 class Console {
   constructor() {
     this.sportInitialized = false;
