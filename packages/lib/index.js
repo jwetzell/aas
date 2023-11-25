@@ -318,7 +318,7 @@ class Console {
    *
    * @param {Buffer} buffer
    */
-  getWeirdInt(buffer) {
+  getInt(buffer) {
     let num = ((buffer >> 4) & 15) * 10;
     if (num > 90) {
       num = 0;
