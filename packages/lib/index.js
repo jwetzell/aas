@@ -102,11 +102,11 @@ class Console {
       const homeBinaryInfo = this.currentBuffer.buffer.at(12).toString(2).padStart(8, '0');
       const guestBinaryInfo = this.currentBuffer.buffer.at(14).toString(2).padStart(8, '0');
 
-      this.state.home.score = parseInt(this.currentBuffer.hex.substring(22, 24), 10);
+      this.state.home.score = this.getInt(this.currentBuffer.buffer.at(11));
       if (homeBinaryInfo[0] === '1') {
         this.state.home.score += 100;
       }
-      this.state.guest.score = parseInt(this.currentBuffer.hex.substring(26, 28), 10);
+      this.state.guest.score = this.getInt(this.currentBuffer.buffer.at(13));
       if (guestBinaryInfo[0] === '1') {
         this.state.guest.score += 100;
       }
@@ -121,8 +121,8 @@ class Console {
       this.state.guest.bonus = guestBinaryInfo[4] === '1';
       this.state.period = parseInt(this.currentBuffer.hex.substring(31, 32), 10);
 
-      this.state.home.timeouts = parseInt(this.currentBuffer.hex.substring(40, 41), 10);
-      this.state.guest.timeouts = parseInt(this.currentBuffer.hex.substring(41, 42), 10);
+      this.state.home.timeouts = this.currentBuffer.buffer.at(20) >> 4;
+      this.state.guest.timeouts = this.currentBuffer.buffer.at(20) & 15;
     }
   }
 
