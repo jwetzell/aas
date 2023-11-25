@@ -14,6 +14,7 @@ class Console {
   reset() {
     this.sportInitialized = false;
     delete this.sport;
+    this.propertiesToDelete = [];
     this.state = {
       time: {},
       home: {},
@@ -80,6 +81,9 @@ class Console {
           console.log(`unidentified sport data: ${buffer.toString('hex')}`);
           break;
       }
+      if (this.propertiesToDelete) {
+        this.state = _.omit(this.state, this.propertiesToDelete);
+      }
     }
   }
 
@@ -111,137 +115,66 @@ class Console {
     this.state.showTimeOfDay = this.latestPacket.buffer.at(5) === 0xff && this.latestPacket.buffer.at(6) === 0xff;
 
     if (this.latestPacket.buffer.at(10) === 0x11) {
-      const homeBinaryInfo = this.latestPacket.buffer.at(12).toString(2).padStart(8, '0');
-      const guestBinaryInfo = this.latestPacket.buffer.at(14).toString(2).padStart(8, '0');
-
-      this.state.home.score = this.getInt(this.latestPacket.buffer.at(11));
-      if (homeBinaryInfo[0] === '1') {
-        this.state.home.score += 100;
-      }
-      this.state.guest.score = this.getInt(this.latestPacket.buffer.at(13));
-      if (guestBinaryInfo[0] === '1') {
-        this.state.guest.score += 100;
-      }
-
-      this.state.home.poss = homeBinaryInfo[7] === '1';
-      this.state.guest.poss = guestBinaryInfo[7] === '1';
-
-      this.state.home.doubleBonus = homeBinaryInfo[3] === '1';
-      this.state.home.bonus = homeBinaryInfo[4] === '1';
-
-      this.state.guest.doubleBonus = guestBinaryInfo[3] === '1';
-      this.state.guest.bonus = guestBinaryInfo[4] === '1';
       this.state.period = parseInt(this.latestPacket.hex.substring(31, 32), 10);
 
-      this.state.home.timeouts = this.latestPacket.buffer.at(20) >> 4;
-      this.state.guest.timeouts = this.latestPacket.buffer.at(20) & 15;
+      if (this.state.home && this.state.guest) {
+        const homeBinaryInfo = this.latestPacket.buffer.at(12).toString(2).padStart(8, '0');
+        const guestBinaryInfo = this.latestPacket.buffer.at(14).toString(2).padStart(8, '0');
+
+        this.state.home.score = this.getInt(this.latestPacket.buffer.at(11));
+        if (homeBinaryInfo[0] === '1') {
+          this.state.home.score += 100;
+        }
+        this.state.guest.score = this.getInt(this.latestPacket.buffer.at(13));
+        if (guestBinaryInfo[0] === '1') {
+          this.state.guest.score += 100;
+        }
+
+        this.state.home.poss = homeBinaryInfo[7] === '1';
+        this.state.guest.poss = guestBinaryInfo[7] === '1';
+
+        this.state.home.doubleBonus = homeBinaryInfo[3] === '1';
+        this.state.home.bonus = homeBinaryInfo[4] === '1';
+
+        this.state.guest.doubleBonus = guestBinaryInfo[3] === '1';
+        this.state.guest.bonus = guestBinaryInfo[4] === '1';
+
+        this.state.home.timeouts = this.latestPacket.buffer.at(20) >> 4;
+        this.state.guest.timeouts = this.latestPacket.buffer.at(20) & 15;
+      }
     }
   }
 
   parseBaseball() {
     if (!this.sportInitialized) {
+      this.propertiesToDelete = [
+        'home.bonus',
+        'guest.bonus',
+        'home.doubleBonus',
+        'guest.doubleBonus',
+        'home.poss',
+        'guest.poss',
+        'home.timeouts',
+        'guest.timeouts',
+        'auxTime',
+        'aux2Time',
+        'period',
+        'auxHorn',
+      ];
+
       this.state.bases = {
         first: false,
         second: false,
         third: false,
       };
 
-      this.state.innings = {
-        1: {
-          home: {
-            score: 0,
-          },
-          guest: {
-            score: 0,
-          },
-        },
-
-        2: {
-          home: {
-            score: 0,
-          },
-          guest: {
-            score: 0,
-          },
-        },
-
-        3: {
-          home: {
-            score: 0,
-          },
-          guest: {
-            score: 0,
-          },
-        },
-
-        4: {
-          home: {
-            score: 0,
-          },
-          guest: {
-            score: 0,
-          },
-        },
-
-        5: {
-          home: {
-            score: 0,
-          },
-          guest: {
-            score: 0,
-          },
-        },
-
-        6: {
-          home: {
-            score: 0,
-          },
-          guest: {
-            score: 0,
-          },
-        },
-
-        7: {
-          home: {
-            score: 0,
-          },
-          guest: {
-            score: 0,
-          },
-        },
-
-        8: {
-          home: {
-            score: 0,
-          },
-          guest: {
-            score: 0,
-          },
-        },
-
-        9: {
-          home: {
-            score: 0,
-          },
-          guest: {
-            score: 0,
-          },
-        },
-
-        10: {
-          home: {
-            score: 0,
-          },
-          guest: {
-            score: 0,
-          },
-        },
-      };
       this.sportInitialized = true;
     }
 
     const seqNum = this.latestPacket.buffer.at(10);
     if (seqNum === 0x11) {
+      this.state.inning = this.state.period;
+
       this.state.guest.hits = parseInt(this.latestPacket.buffer.subarray(23, 24).toString('hex'), 10);
       this.state.home.hits = parseInt(this.latestPacket.buffer.subarray(22, 23).toString('hex'), 10);
 
@@ -263,22 +196,29 @@ class Console {
       const binaryFlags = this.latestPacket.buffer.at(12).toString(2).padStart(8, '0');
       this.state.hit = binaryFlags[4] === '1';
     } else if (seqNum === 0x22) {
+      this.state.innings = [];
       const guestInningStartIndex = 11;
       const homeInningStartIndex = 21;
 
       for (let i = 0; i < 10; i += 1) {
+        const inning = {
+          inningNum: i + 1,
+          home: {},
+          guest: {},
+        };
         const guestInningScore = this.latestPacket.buffer
           .subarray(guestInningStartIndex + i, guestInningStartIndex + i + 1)
           .toString('hex');
         if (guestInningScore !== '0a') {
-          this.state.innings[i + 1].guest.score = parseInt(guestInningScore, 10);
+          inning.guest.score = parseInt(guestInningScore, 10);
         }
         const homeInningScore = this.latestPacket.buffer
           .subarray(homeInningStartIndex + i, homeInningStartIndex + i + 1)
           .toString('hex');
         if (homeInningScore !== '0a') {
-          this.state.innings[i + 1].home.score = parseInt(homeInningScore, 10);
+          inning.home.score = parseInt(homeInningScore, 10);
         }
+        this.state.innings.push(inning);
       }
     }
   }
@@ -290,19 +230,39 @@ class Console {
   parseFootball() {
     if (!this.sportInitialized) {
       this.sportInitialized = true;
+      this.propertiesToDelete = [
+        'home.bonus',
+        'guest.bonus',
+        'home.doubleBonus',
+        'guest.doubleBonus',
+        'auxTime',
+        'aux2Time',
+        'period',
+        'auxHorn',
+      ];
     }
+
+    this.state.playClock = this.state.auxTime;
 
     const seqNum = this.latestPacket.buffer.at(10);
     if (seqNum === 0x11) {
-      this.state.quarter = parseInt(this.latestPacket.hex.substring(31, 32), 10);
+      this.state.quarter = this.state.period;
       this.state.down = parseInt(this.latestPacket.hex.substring(39, 40), 10);
-      this.state.yardsToGo = parseInt(this.latestPacket.buffer.subarray(18, 19).toString('hex'), 10);
-      this.state.ballOn = parseInt(this.latestPacket.buffer.subarray(21, 22).toString('hex'), 10);
+      this.state.yardsToGo = this.getInt(this.latestPacket.buffer.at(18));
+      this.state.ballOn = this.getInt(this.latestPacket.buffer.at(21));
     }
   }
 
   parseVolleyball() {
     if (!this.sportInitialized) {
+      this.propertiesToDelete = [
+        'home.bonus',
+        'guest.bonus',
+        'home.doubleBonus',
+        'guest.doubleBonus',
+        'auxTime',
+        'aux2Time',
+      ];
       this.sportInitialized = true;
     }
     const seqNum = this.latestPacket.buffer.at(10);
@@ -315,7 +275,15 @@ class Console {
   parseBasketball() {
     if (!this.sportInitialized) {
       this.sportInitialized = true;
+      this.propertiesToDelete = ['home.doubleBonus', 'guest.doubleBonus', 'auxTime', 'aux2Time'];
     }
+
+    this.state.shotClock = {
+      seconds: this.state.auxTime,
+      tenths: this.state.aux2Time === '0a' ? '0' : parseInt(this.state.aux2Time, 10).toString(),
+    };
+
+    this.state.shotClock.display = `${this.state.shotClock.seconds}`;
 
     const seqNum = this.latestPacket.buffer.at(10);
     if (seqNum === 0x11) {
@@ -330,11 +298,27 @@ class Console {
 
   parseWrestling() {
     if (!this.sportInitialized) {
+      this.propertiesToDelete = [
+        'home.doubleBonus',
+        'guest.doubleBonus',
+        'home.poss',
+        'guest.poss',
+        'auxTime',
+        'aux2Time',
+      ];
       this.sportInitialized = true;
     }
 
+    this.state.advantage = {
+      minutes: this.state.aux2Time,
+      seconds: this.state.auxTime,
+    };
+
     const seqNum = this.latestPacket.buffer.at(10);
     if (seqNum === 0x11) {
+      this.state.home.advantage = this.state.home.poss;
+      this.state.guest.advantage = this.state.guest.poss;
+
       this.state.home.boutScore = this.getInt(this.latestPacket.buffer.at(16));
       this.state.guest.boutScore = this.getInt(this.latestPacket.buffer.at(17));
       this.state.weight =
@@ -344,13 +328,14 @@ class Console {
 
   parseAutoRacing() {
     if (!this.sportInitialized) {
-      this.state.positions = [];
+      this.propertiesToDelete = ['home', 'guest', 'auxTime', 'aux2Time', 'auxHorn', 'period'];
       this.sportInitialized = true;
     }
     const seqNum = this.latestPacket.buffer.at(10);
     if (seqNum === 0x11) {
       this.state.lap =
         this.getInt(this.latestPacket.buffer.at(19)) * 100 + this.getInt(this.latestPacket.buffer.at(20));
+      this.state.positions = [];
       for (let i = 0; i < 10; i += 1) {
         const positionByte = this.latestPacket.buffer.at(21 + i);
         if (positionByte !== 0xaa) {
@@ -362,11 +347,22 @@ class Console {
 
   parseSoccer() {
     if (!this.sportInitialized) {
+      this.propertiesToDelete = [
+        'home.bonus',
+        'guest.bonus',
+        'home.doubleBonus',
+        'guest.doubleBonus',
+        'auxTime',
+        'aux2Time',
+        'auxHorn',
+        'period',
+      ];
       this.sportInitialized = true;
     }
 
     const seqNum = this.latestPacket.buffer.at(10);
     if (seqNum === 0x11) {
+      this.half = this.period;
       this.state.home.shotsOnGoal = this.getInt(this.latestPacket.buffer.at(16));
       this.state.guest.shotsOnGoal = this.getInt(this.latestPacket.buffer.at(17));
       this.state.home.cornerKicks = this.getInt(this.latestPacket.buffer.at(21));
@@ -427,6 +423,18 @@ class Console {
 
   parseTrack() {
     if (!this.sportInitialized) {
+      this.propertiesToDelete = [
+        'home.timeouts',
+        'guest.timeouts',
+        'home.bonus',
+        'guest.bonus',
+        'home.doubleBonus',
+        'guest.doubleBonus',
+        'auxTime',
+        'aux2Time',
+        'period',
+        'auxHorn',
+      ];
       this.sportInitialized = true;
     }
 
@@ -450,22 +458,20 @@ class Console {
 
   parseWhirley() {
     if (!this.sportInitialized) {
+      this.propertiesToDelete = [
+        'home.timeouts',
+        'guest.timeouts',
+        'home.bonus',
+        'guest.bonus',
+        'home.doubleBonus',
+        'guest.doubleBonus',
+        'auxTime',
+        'aux2Time',
+      ];
       this.sportInitialized = true;
     }
-    const propertiesToDelete = [
-      'home.timeouts',
-      'guest.timeouts',
-      'home.bonus',
-      'guest.bonus',
-      'home.doubleBonus',
-      'guest.doubleBonus',
-      'auxTime',
-      'aux2Time',
-    ];
 
     this.state.key = this.state.aux2Time;
-
-    this.state = _.omit(this.state, propertiesToDelete);
   }
 
   /**
