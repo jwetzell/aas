@@ -314,6 +314,20 @@ class Console {
 
     // TODO(jwetzell): decode player stats in seqNum >= 22
   }
+  /**
+   *
+   * @param {Buffer} buffer
+   */
+  getWeirdInt(buffer) {
+    let num = ((buffer >> 4) & 15) * 10;
+    if (num > 90) {
+      num = 0;
+    }
+    if ((buffer & 15) > 9) {
+      buffer = 0x00;
+    }
+    return num + (buffer & 15);
+  }
 
   toJSON() {
     return {
