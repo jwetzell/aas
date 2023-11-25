@@ -4,7 +4,8 @@
   "description": "collection of things related to All American Scoreboards 8000",
   "main": "index.js",
   "scripts": {
-    "start": "npm run start --workspace packages/cli"
+    "start": "npm run start --workspace packages/cli",
+    "build:cli": "npm run build --workspace packages/cli"
   },
   "keywords": [],
   "author": "",
