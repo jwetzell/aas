@@ -26,12 +26,12 @@ class Console {
    */
   update(buffer) {
     if (buffer.at(0) === 0xfc && buffer.at(1) === 0xfc) {
-      this.currentBuffer = {
+      this.latestPacket = {
         hex: buffer.toString('hex'),
         buffer,
       };
       this.parseCommon();
-      switch (this.currentBuffer.buffer.at(2)) {
+      switch (this.latestPacket.buffer.at(2)) {
         case 0x51:
           this.sport = 'basketball';
           this.parseBasketball();
@@ -60,7 +60,8 @@ class Console {
           throw new Error('Hockey is not implemented');
         case 0x85:
           this.sport = 'auto_racing';
-          throw new Error('Auto racing is not implemented');
+          this.parseAutoRacing();
+          break;
         case 0x82:
           this.sport = 'track';
           throw new Error('Track is not implemented');
@@ -78,35 +79,35 @@ class Console {
   }
 
   parseCommon() {
-    this.state.time.minutes = this.currentBuffer.buffer.subarray(5, 6).toString('hex');
-    this.state.time.seconds = this.currentBuffer.buffer.subarray(6, 7).toString('hex');
-    this.state.time.tenths = this.currentBuffer.hex.substring(15, 16);
+    this.state.time.minutes = this.latestPacket.buffer.subarray(5, 6).toString('hex');
+    this.state.time.seconds = this.latestPacket.buffer.subarray(6, 7).toString('hex');
+    this.state.time.tenths = this.latestPacket.hex.substring(15, 16);
 
-    this.state.time.showTenths = (this.currentBuffer.buffer.at(4) & 16) !== 0;
+    this.state.time.showTenths = (this.latestPacket.buffer.at(4) & 16) !== 0;
     this.state.time.display = `${this.state.time.minutes}:${this.state.time.seconds}`;
 
     if (this.state.time.showTenths) {
       this.state.time.display += `.${this.state.time.tenths}`;
     }
 
-    this.state.auxTime = this.currentBuffer.buffer.subarray(8, 9).toString('hex');
-    this.state.aux2Time = this.currentBuffer.buffer.subarray(9, 10).toString('hex');
+    this.state.auxTime = this.latestPacket.buffer.subarray(8, 9).toString('hex');
+    this.state.aux2Time = this.latestPacket.buffer.subarray(9, 10).toString('hex');
 
-    const hornBinaryFlags = this.currentBuffer.buffer.at(4).toString(2).padStart(8, '0');
+    const hornBinaryFlags = this.latestPacket.buffer.at(4).toString(2).padStart(8, '0');
     this.state.horn = hornBinaryFlags[0] === '1';
     this.state.auxHorn = hornBinaryFlags[1] === '1';
 
-    this.state.showTimeOfDay = this.currentBuffer.buffer.at(5) === 0xff && this.currentBuffer.buffer.at(6) === 0xff;
+    this.state.showTimeOfDay = this.latestPacket.buffer.at(5) === 0xff && this.latestPacket.buffer.at(6) === 0xff;
 
-    if (this.currentBuffer.buffer.at(10) === 0x11) {
-      const homeBinaryInfo = this.currentBuffer.buffer.at(12).toString(2).padStart(8, '0');
-      const guestBinaryInfo = this.currentBuffer.buffer.at(14).toString(2).padStart(8, '0');
+    if (this.latestPacket.buffer.at(10) === 0x11) {
+      const homeBinaryInfo = this.latestPacket.buffer.at(12).toString(2).padStart(8, '0');
+      const guestBinaryInfo = this.latestPacket.buffer.at(14).toString(2).padStart(8, '0');
 
-      this.state.home.score = this.getInt(this.currentBuffer.buffer.at(11));
+      this.state.home.score = this.getInt(this.latestPacket.buffer.at(11));
       if (homeBinaryInfo[0] === '1') {
         this.state.home.score += 100;
       }
-      this.state.guest.score = this.getInt(this.currentBuffer.buffer.at(13));
+      this.state.guest.score = this.getInt(this.latestPacket.buffer.at(13));
       if (guestBinaryInfo[0] === '1') {
         this.state.guest.score += 100;
       }
@@ -119,10 +120,10 @@ class Console {
 
       this.state.guest.doubleBonus = guestBinaryInfo[3] === '1';
       this.state.guest.bonus = guestBinaryInfo[4] === '1';
-      this.state.period = parseInt(this.currentBuffer.hex.substring(31, 32), 10);
+      this.state.period = parseInt(this.latestPacket.hex.substring(31, 32), 10);
 
-      this.state.home.timeouts = this.currentBuffer.buffer.at(20) >> 4;
-      this.state.guest.timeouts = this.currentBuffer.buffer.at(20) & 15;
+      this.state.home.timeouts = this.latestPacket.buffer.at(20) >> 4;
+      this.state.guest.timeouts = this.latestPacket.buffer.at(20) & 15;
     }
   }
 
@@ -228,40 +229,40 @@ class Console {
       this.sportInitialized = true;
     }
 
-    const seqNum = this.currentBuffer.buffer.at(10);
+    const seqNum = this.latestPacket.buffer.at(10);
     if (seqNum === 0x11) {
-      this.state.guest.hits = parseInt(this.currentBuffer.buffer.subarray(23, 24).toString('hex'), 10);
-      this.state.home.hits = parseInt(this.currentBuffer.buffer.subarray(22, 23).toString('hex'), 10);
+      this.state.guest.hits = parseInt(this.latestPacket.buffer.subarray(23, 24).toString('hex'), 10);
+      this.state.home.hits = parseInt(this.latestPacket.buffer.subarray(22, 23).toString('hex'), 10);
 
-      this.state.batter = this.currentBuffer.buffer.subarray(21, 22).toString('hex');
+      this.state.batter = this.latestPacket.buffer.subarray(21, 22).toString('hex');
       if (this.state.batter === 'aa') {
         this.state.batter = '';
       }
-      this.state.home.pitcher = parseInt(this.currentBuffer.buffer.subarray(26, 27).toString('hex'), 10);
-      this.state.guest.pitcher = parseInt(this.currentBuffer.buffer.subarray(24, 25).toString('hex'), 10);
-      const baseBinaryInfo = this.currentBuffer.buffer.at(19).toString(2).padStart(8, '0');
+      this.state.home.pitcher = parseInt(this.latestPacket.buffer.subarray(26, 27).toString('hex'), 10);
+      this.state.guest.pitcher = parseInt(this.latestPacket.buffer.subarray(24, 25).toString('hex'), 10);
+      const baseBinaryInfo = this.latestPacket.buffer.at(19).toString(2).padStart(8, '0');
 
       this.state.bases.first = baseBinaryInfo[3] === '1';
       this.state.bases.second = baseBinaryInfo[2] === '1';
       this.state.bases.third = baseBinaryInfo[1] === '1';
 
-      this.state.outs = parseInt(this.currentBuffer.hex.substring(37, 38), 10);
-      this.state.strikes = parseInt(this.currentBuffer.hex.substring(36, 37), 10);
-      this.state.balls = parseInt(this.currentBuffer.hex.substring(39, 40), 10);
-      const binaryFlags = this.currentBuffer.buffer.at(12).toString(2).padStart(8, '0');
+      this.state.outs = parseInt(this.latestPacket.hex.substring(37, 38), 10);
+      this.state.strikes = parseInt(this.latestPacket.hex.substring(36, 37), 10);
+      this.state.balls = parseInt(this.latestPacket.hex.substring(39, 40), 10);
+      const binaryFlags = this.latestPacket.buffer.at(12).toString(2).padStart(8, '0');
       this.state.hit = binaryFlags[4] === '1';
     } else if (seqNum === 0x22) {
       const guestInningStartIndex = 11;
       const homeInningStartIndex = 21;
 
       for (let i = 0; i < 10; i += 1) {
-        const guestInningScore = this.currentBuffer.buffer
+        const guestInningScore = this.latestPacket.buffer
           .subarray(guestInningStartIndex + i, guestInningStartIndex + i + 1)
           .toString('hex');
         if (guestInningScore !== '0a') {
           this.state.innings[i + 1].guest.score = parseInt(guestInningScore, 10);
         }
-        const homeInningScore = this.currentBuffer.buffer
+        const homeInningScore = this.latestPacket.buffer
           .subarray(homeInningStartIndex + i, homeInningStartIndex + i + 1)
           .toString('hex');
         if (homeInningScore !== '0a') {
@@ -280,12 +281,12 @@ class Console {
       this.sportInitialized = true;
     }
 
-    const seqNum = this.currentBuffer.buffer.at(10);
+    const seqNum = this.latestPacket.buffer.at(10);
     if (seqNum === 0x11) {
-      this.state.quarter = parseInt(this.currentBuffer.hex.substring(31, 32), 10);
-      this.state.down = parseInt(this.currentBuffer.hex.substring(39, 40), 10);
-      this.state.yardsToGo = parseInt(this.currentBuffer.buffer.subarray(18, 19).toString('hex'), 10);
-      this.state.ballOn = parseInt(this.currentBuffer.buffer.subarray(21, 22).toString('hex'), 10);
+      this.state.quarter = parseInt(this.latestPacket.hex.substring(31, 32), 10);
+      this.state.down = parseInt(this.latestPacket.hex.substring(39, 40), 10);
+      this.state.yardsToGo = parseInt(this.latestPacket.buffer.subarray(18, 19).toString('hex'), 10);
+      this.state.ballOn = parseInt(this.latestPacket.buffer.subarray(21, 22).toString('hex'), 10);
     }
   }
 
@@ -293,10 +294,10 @@ class Console {
     if (!this.sportInitialized) {
       this.sportInitialized = true;
     }
-    const seqNum = this.currentBuffer.buffer.at(10);
+    const seqNum = this.latestPacket.buffer.at(10);
     if (seqNum === 0x11) {
-      this.state.home.gamesWon = parseInt(this.currentBuffer.hex.substring(32, 34), 10);
-      this.state.guest.gamesWon = parseInt(this.currentBuffer.hex.substring(34, 36), 10);
+      this.state.home.gamesWon = parseInt(this.latestPacket.hex.substring(32, 34), 10);
+      this.state.guest.gamesWon = parseInt(this.latestPacket.hex.substring(34, 36), 10);
     }
   }
 
@@ -305,12 +306,12 @@ class Console {
       this.sportInitialized = true;
     }
 
-    const seqNum = this.currentBuffer.buffer.at(10);
+    const seqNum = this.latestPacket.buffer.at(10);
     if (seqNum === 0x11) {
-      this.state.home.fouls = parseInt(this.currentBuffer.hex.substring(32, 34), 10);
-      this.state.guest.fouls = parseInt(this.currentBuffer.hex.substring(34, 36), 10);
-      this.state.playerNum = parseInt(this.currentBuffer.hex.substring(36, 38), 10);
-      this.state.playerFoul = parseInt(this.currentBuffer.hex.substring(39, 40), 10);
+      this.state.home.fouls = parseInt(this.latestPacket.hex.substring(32, 34), 10);
+      this.state.guest.fouls = parseInt(this.latestPacket.hex.substring(34, 36), 10);
+      this.state.playerNum = parseInt(this.latestPacket.hex.substring(36, 38), 10);
+      this.state.playerFoul = parseInt(this.latestPacket.hex.substring(39, 40), 10);
     }
 
     // TODO(jwetzell): decode player stats in seqNum >= 22
@@ -321,12 +322,30 @@ class Console {
       this.sportInitialized = true;
     }
 
-    const seqNum = this.currentBuffer.buffer.at(10);
+    const seqNum = this.latestPacket.buffer.at(10);
     if (seqNum === 0x11) {
-      this.state.home.boutScore = this.getInt(this.currentBuffer.buffer.at(16));
-      this.state.guest.boutScore = this.getInt(this.currentBuffer.buffer.at(17));
+      this.state.home.boutScore = this.getInt(this.latestPacket.buffer.at(16));
+      this.state.guest.boutScore = this.getInt(this.latestPacket.buffer.at(17));
       this.state.weight =
-        this.getInt(this.currentBuffer.buffer.at(18)) + this.getInt(this.currentBuffer.buffer.at(19)) * 100;
+        this.getInt(this.latestPacket.buffer.at(18)) + this.getInt(this.latestPacket.buffer.at(19)) * 100;
+    }
+  }
+
+  parseAutoRacing() {
+    if (!this.sportInitialized) {
+      this.sportInitialized = true;
+    }
+    const seqNum = this.latestPacket.buffer.at(10);
+    if (seqNum === 0x11) {
+      this.state.lap =
+        this.getInt(this.latestPacket.buffer.at(19)) * 100 + this.getInt(this.latestPacket.buffer.at(20));
+      this.state.positions = [];
+      for (let i = 0; i < 10; i += 1) {
+        const positionByte = this.latestPacket.buffer.at(21 + i);
+        if (positionByte !== 0xaa) {
+          this.state.positions.push(this.getInt(positionByte));
+        }
+      }
     }
   }
 
