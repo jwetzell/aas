@@ -303,10 +303,8 @@ class Console {
     }
     const seqNum = this.currentBuffer.buffer.at(10);
     if (seqNum === 0x11) {
-      this.state.home.gamesWon = parseInt(this.currentBuffer.buffer.subarray(16, 17).toString('hex'), 10);
-      this.state.guest.gamesWon = parseInt(this.currentBuffer.buffer.subarray(17, 18).toString('hex'), 10);
-
-      this.state.game = parseInt(this.currentBuffer.hex.substring(31, 32), 10);
+      this.state.home.gamesWon = parseInt(this.currentBuffer.hex.substring(32, 34), 10);
+      this.state.guest.gamesWon = parseInt(this.currentBuffer.hex.substring(34, 36), 10);
     }
   }
 
