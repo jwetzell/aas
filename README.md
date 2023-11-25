@@ -10,3 +10,4 @@
 - soccer
 - hockey
 - track
+- whirley
