@@ -8,3 +8,4 @@
 - wrestling
 - auto racing
 - soccer
+- hockey

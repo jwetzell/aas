@@ -58,7 +58,8 @@ class Console {
           break;
         case 0x40:
           this.sport = 'hockey';
-          throw new Error('Hockey is not implemented');
+          this.parseHockey();
+          break;
         case 0x85:
           this.sport = 'auto_racing';
           this.parseAutoRacing();
@@ -361,6 +362,57 @@ class Console {
       this.state.guest.shotsOnGoal = this.getInt(this.latestPacket.buffer.at(17));
       this.state.home.cornerKicks = this.getInt(this.latestPacket.buffer.at(21));
       this.state.guest.cornerKicks = this.getInt(this.latestPacket.buffer.at(22));
+    }
+  }
+
+  parseHockey() {
+    if (!this.sportInitialized) {
+      this.sportInitialized = true;
+    }
+
+    const seqNum = this.latestPacket.buffer.at(10);
+    if (seqNum === 0x11) {
+      this.state.home.shotsOnGoal = this.getInt(this.latestPacket.buffer.at(16));
+      this.state.guest.shotsOnGoal = this.getInt(this.latestPacket.buffer.at(17));
+      this.state.home.saves = this.getInt(this.latestPacket.buffer.at(21));
+      this.state.guest.saves = this.getInt(this.latestPacket.buffer.at(22));
+    }
+    if (seqNum === 0x22) {
+      this.state.home.penalties = [];
+      this.state.guest.penalties = [];
+      for (let i = 0; i < 2; i += 1) {
+        const startIndex = 11 + i * 3;
+        if (this.latestPacket.buffer.at(startIndex) !== 0xaa) {
+          const penaltyClock = {
+            minutes: this.latestPacket.buffer.subarray(startIndex, startIndex + 1).toString('hex'),
+            seconds: this.latestPacket.buffer.subarray(startIndex + 1, startIndex + 2).toString('hex'),
+          };
+
+          penaltyClock.display = `${penaltyClock.minutes}:${penaltyClock.seconds}`;
+
+          this.state.home.penalties.push({
+            clock: penaltyClock,
+            playerNum: this.getInt(this.latestPacket.buffer.at(startIndex + 2)),
+          });
+        }
+      }
+
+      for (let i = 0; i < 2; i += 1) {
+        const startIndex = 17 + i * 3;
+        if (this.latestPacket.buffer.at(startIndex) !== 0xaa) {
+          const penaltyClock = {
+            minutes: this.latestPacket.buffer.subarray(startIndex, startIndex + 1).toString('hex'),
+            seconds: this.latestPacket.buffer.subarray(startIndex + 1, startIndex + 2).toString('hex'),
+          };
+
+          penaltyClock.display = `${penaltyClock.minutes}:${penaltyClock.seconds}`;
+
+          this.state.guest.penalties.push({
+            clock: penaltyClock,
+            playerNum: this.getInt(this.latestPacket.buffer.at(startIndex + 2)),
+          });
+        }
+      }
     }
   }
 
