@@ -88,17 +88,8 @@ class Console {
       this.state.time.display += `.${this.state.time.tenths}`;
     }
 
-    this.state.auxTime.seconds = this.currentBuffer.hex.substring(16, 18);
-    if (this.state.auxTime.seconds === 'aa') {
-      this.state.auxTime.seconds = '00';
-    }
-
-    this.state.auxTime.tenths = this.currentBuffer.hex.substring(19, 20);
-    if (this.state.auxTime.tenths === 'a') {
-      this.state.auxTime.tenths = '0';
-    }
-
-    this.state.auxTime.display = `${this.state.auxTime.seconds}.${this.state.auxTime.tenths}`;
+    this.state.auxTime = this.currentBuffer.buffer.subarray(8, 9).toString('hex');
+    this.state.aux2Time = this.currentBuffer.buffer.subarray(9, 10).toString('hex');
 
     const hornBinaryFlags = this.currentBuffer.buffer.at(4).toString(2).padStart(8, '0');
     this.state.horn = hornBinaryFlags[0] === '1';
