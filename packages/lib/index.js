@@ -82,7 +82,7 @@ class Console {
     this.state.time.seconds = this.currentBuffer.buffer.subarray(6, 7).toString('hex');
     this.state.time.tenths = this.currentBuffer.hex.substring(15, 16);
 
-    this.state.time.showTenths = this.currentBuffer.hex.at(8) === '1';
+    this.state.time.showTenths = (this.currentBuffer.buffer.at(4) & 16) !== 0;
     this.state.time.display = `${this.state.time.minutes}:${this.state.time.seconds}`;
 
     if (this.state.time.showTenths) {
