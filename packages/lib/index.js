@@ -15,7 +15,6 @@ class Console {
     delete this.sport;
     this.state = {
       time: {},
-      auxTime: {},
       home: {},
       guest: {},
     };
@@ -54,7 +53,8 @@ class Console {
           throw new Error('Soccer is not implemented');
         case 0x60:
           this.sport = 'wrestling';
-          throw new Error('Wrestling is not implemented');
+          this.parseWrestling();
+          break;
         case 0x40:
           this.sport = 'hockey';
           throw new Error('Hockey is not implemented');
@@ -315,6 +315,21 @@ class Console {
 
     // TODO(jwetzell): decode player stats in seqNum >= 22
   }
+
+  parseWrestling() {
+    if (!this.sportInitialized) {
+      this.sportInitialized = true;
+    }
+
+    const seqNum = this.currentBuffer.buffer.at(10);
+    if (seqNum === 0x11) {
+      this.state.home.boutScore = this.getInt(this.currentBuffer.buffer.at(16));
+      this.state.guest.boutScore = this.getInt(this.currentBuffer.buffer.at(17));
+      this.state.weight =
+        this.getInt(this.currentBuffer.buffer.at(18)) + this.getInt(this.currentBuffer.buffer.at(19)) * 100;
+    }
+  }
+
   /**
    *
    * @param {number} packedNumber
