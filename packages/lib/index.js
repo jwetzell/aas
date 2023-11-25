@@ -66,7 +66,8 @@ class Console {
           break;
         case 0x82:
           this.sport = 'track';
-          throw new Error('Track is not implemented');
+          this.parseTrack();
+          break;
         case 0x59:
           this.sport = 'whirley';
           throw new Error('Whirley is not implemented');
@@ -413,6 +414,29 @@ class Console {
           });
         }
       }
+    }
+  }
+
+  parseTrack() {
+    if (!this.sportInitialized) {
+      this.sportInitialized = true;
+    }
+
+    const seqNum = this.latestPacket.buffer.at(10);
+    if (seqNum === 0x11) {
+      this.state.place = this.latestPacket.buffer.at(18);
+      this.state.heat = this.latestPacket.buffer.at(15) & 15;
+      this.state.lane = this.latestPacket.buffer.at(19);
+      this.state.event = this.getInt(this.latestPacket.buffer.at(21));
+
+      this.state.teamScores = [];
+      this.state.teamScores.push(this.state.home.score);
+      this.state.teamScores.push(this.state.guest.score);
+
+      this.state.teamScores.push(this.getInt(this.latestPacket.buffer.at(16)));
+      this.state.teamScores.push(this.getInt(this.latestPacket.buffer.at(17)));
+      this.state.teamScores.push(this.getInt(this.latestPacket.buffer.at(22)));
+      this.state.teamScores.push(this.getInt(this.latestPacket.buffer.at(23)));
     }
   }
 
