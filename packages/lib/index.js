@@ -316,17 +316,18 @@ class Console {
   }
   /**
    *
-   * @param {Buffer} buffer
+   * @param {number} packedNumber
    */
-  getInt(buffer) {
-    let num = ((buffer >> 4) & 15) * 10;
+  getInt(packedNumber) {
+    let originalValue = packedNumber;
+    let num = ((originalValue >> 4) & 15) * 10;
     if (num > 90) {
       num = 0;
     }
-    if ((buffer & 15) > 9) {
-      buffer = 0x00;
+    if ((originalValue & 15) > 9) {
+      originalValue = 0x00;
     }
-    return num + (buffer & 15);
+    return num + (originalValue & 15);
   }
 
   toJSON() {
