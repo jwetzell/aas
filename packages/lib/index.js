@@ -1,10 +1,11 @@
 /* eslint-disable no-bitwise */
+const _ = require('lodash');
+
 class Console {
   constructor() {
     this.sportInitialized = false;
     this.state = {
       time: {},
-      auxTime: {},
       home: {},
       guest: {},
     };
@@ -70,7 +71,8 @@ class Console {
           break;
         case 0x59:
           this.sport = 'whirley';
-          throw new Error('Whirley is not implemented');
+          this.parseWhirley();
+          break;
         case 0x67:
           this.sport = 'segment';
           throw new Error('Segment is not implemented');
@@ -94,7 +96,13 @@ class Console {
     }
 
     this.state.auxTime = this.latestPacket.buffer.subarray(8, 9).toString('hex');
+    if (this.state.auxTime === 'aa') {
+      this.state.auxTime = '';
+    }
     this.state.aux2Time = this.latestPacket.buffer.subarray(9, 10).toString('hex');
+    if (this.state.aux2Time === 'aa') {
+      this.state.aux2Time = '';
+    }
 
     const hornBinaryFlags = this.latestPacket.buffer.at(4).toString(2).padStart(8, '0');
     this.state.horn = hornBinaryFlags[0] === '1';
@@ -438,6 +446,26 @@ class Console {
       this.state.teamScores.push(this.getInt(this.latestPacket.buffer.at(22)));
       this.state.teamScores.push(this.getInt(this.latestPacket.buffer.at(23)));
     }
+  }
+
+  parseWhirley() {
+    if (!this.sportInitialized) {
+      this.sportInitialized = true;
+    }
+    const propertiesToDelete = [
+      'home.timeouts',
+      'guest.timeouts',
+      'home.bonus',
+      'guest.bonus',
+      'home.doubleBonus',
+      'guest.doubleBonus',
+      'auxTime',
+      'aux2Time',
+    ];
+
+    this.state.key = this.state.aux2Time;
+
+    this.state = _.omit(this.state, propertiesToDelete);
   }
 
   /**
