@@ -467,11 +467,7 @@ class Console {
 module.exports = {
   Console,
   Packets: {
-    START_LIVE: Buffer.from([
-      ...[0xfb, 0xb1, 0, 0, 0, 0, 0x54],
-      ...[0xfb, 0xc1, 0, 0, 0, 0, 0x44],
-      ...[0xfb, 0xb1, 0, 0, 0, 0, 0x54],
-    ]),
-    STOP_LIVE: Buffer.from([...[0xfb, 0xc0, 0, 0, 0, 0, 0x45], ...[0xfb, 0xb0, 0, 0, 0, 0, 0x55]]),
+    START_LIVE: Buffer.from([...[0xfb, 0xb1, 0, 0, 0, 0, 0x54], ...[0xfb, 0xc1, 0, 0, 0, 0, 0x44]]),
+    STOP_LIVE: Buffer.from([...[0xfb, 0xb0, 0, 0, 0, 0, 0x55], ...[0xfb, 0xc0, 0, 0, 0, 0, 0x45]]),
   },
 };
