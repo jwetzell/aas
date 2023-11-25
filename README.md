@@ -6,3 +6,4 @@
 - football
 - baseball
 - wrestling
+- auto racing
