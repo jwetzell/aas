@@ -317,7 +317,8 @@ class Console {
     if (seqNum === 0x11) {
       this.state.home.fouls = parseInt(this.currentBuffer.hex.substring(32, 34), 10);
       this.state.guest.fouls = parseInt(this.currentBuffer.hex.substring(34, 36), 10);
-      this.state.period = parseInt(this.currentBuffer.hex.substring(31, 32), 10);
+      this.state.playerNum = parseInt(this.currentBuffer.hex.substring(36, 38), 10);
+      this.state.playerFoul = parseInt(this.currentBuffer.hex.substring(39, 40), 10);
     }
 
     // TODO(jwetzell): decode player stats in seqNum >= 22
