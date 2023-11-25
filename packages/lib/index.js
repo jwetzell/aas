@@ -50,7 +50,8 @@ class Console {
           break;
         case 0x16:
           this.sport = 'soccer';
-          throw new Error('Soccer is not implemented');
+          this.parseSoccer();
+          break;
         case 0x60:
           this.sport = 'wrestling';
           this.parseWrestling();
@@ -333,19 +334,33 @@ class Console {
 
   parseAutoRacing() {
     if (!this.sportInitialized) {
+      this.state.positions = [];
       this.sportInitialized = true;
     }
     const seqNum = this.latestPacket.buffer.at(10);
     if (seqNum === 0x11) {
       this.state.lap =
         this.getInt(this.latestPacket.buffer.at(19)) * 100 + this.getInt(this.latestPacket.buffer.at(20));
-      this.state.positions = [];
       for (let i = 0; i < 10; i += 1) {
         const positionByte = this.latestPacket.buffer.at(21 + i);
         if (positionByte !== 0xaa) {
           this.state.positions.push(this.getInt(positionByte));
         }
       }
+    }
+  }
+
+  parseSoccer() {
+    if (!this.sportInitialized) {
+      this.sportInitialized = true;
+    }
+
+    const seqNum = this.latestPacket.buffer.at(10);
+    if (seqNum === 0x11) {
+      this.state.home.shotsOnGoal = this.getInt(this.latestPacket.buffer.at(16));
+      this.state.guest.shotsOnGoal = this.getInt(this.latestPacket.buffer.at(17));
+      this.state.home.cornerKicks = this.getInt(this.latestPacket.buffer.at(21));
+      this.state.guest.cornerKicks = this.getInt(this.latestPacket.buffer.at(22));
     }
   }
 

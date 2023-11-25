@@ -7,3 +7,4 @@
 - baseball
 - wrestling
 - auto racing
+- soccer
