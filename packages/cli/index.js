@@ -12,7 +12,7 @@ const packageInfo = require('./package.json');
 
 program.name(packageInfo.name);
 program.version(packageInfo.version);
-program.description('Simple protocol router /s');
+program.description('AAS Serial Decoder');
 program.option('-d, --device <serial port path>', 'serialport path');
 program.option('-o, --output <output file>', 'file to write console info to');
 program.addOption(new Option('-f, --format <output format>').choices(['json', 'xml', 'yaml']).default('json'));
@@ -53,7 +53,6 @@ function setup(devicePath) {
     console.error(error.message);
   });
 
-  // Switches the port into "flowing mode"
   port.on('data', (data) => {
     if (aasConsole) {
       try {
