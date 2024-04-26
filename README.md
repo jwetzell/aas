@@ -21,7 +21,7 @@
 ```
 Usage: aas-cli [options]
 
-Simple protocol router /s
+AAS Serial Decoder
 
 Options:
   -V, --version                    output the version number
