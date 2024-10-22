@@ -8,7 +8,11 @@
     "start": "node index.js",
     "dev:css": "tailwindcss -i tailwind.css -o ./html/assets/css/tailwind.css --watch"
   },
-  "author": "",
+  "author": {
+    "name": "Joel Wetzell",
+    "email": "me@jwetzell.com",
+    "url": "https://jwetzell.com"
+  },
   "license": "MIT",
   "dependencies": {
     "express": "^4.18.2"

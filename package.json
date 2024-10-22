@@ -8,7 +8,11 @@
     "build:cli": "npm run build --workspace packages/cli"
   },
   "keywords": [],
-  "author": "",
+  "author": {
+    "name": "Joel Wetzell",
+    "email": "me@jwetzell.com",
+    "url": "https://jwetzell.com"
+  },
   "license": "MIT",
   "dependencies": {},
   "devDependencies": {
