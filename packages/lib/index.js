@@ -1,6 +1,4 @@
 /* eslint-disable no-bitwise */
-const _ = require('lodash');
-
 class Console {
   constructor() {
     this.sportInitialized = false;
@@ -82,7 +80,9 @@ class Console {
           break;
       }
       if (this.propertiesToDelete) {
-        this.state = _.omit(this.state, this.propertiesToDelete);
+        this.propertiesToDelete.forEach((property) => {
+          delete this.state[property];
+        });
       }
     }
   }
