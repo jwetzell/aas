@@ -11,7 +11,7 @@
   },
   "keywords": [],
   "author": "",
-  "license": "ISC",
+  "license": "MIT",
   "dependencies": {
     "@inquirer/select": "^1.3.1",
     "aas-lib": "^0.1.0",
