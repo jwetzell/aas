@@ -11,8 +11,5 @@
     "email": "me@jwetzell.com",
     "url": "https://jwetzell.com"
   },
-  "license": "MIT",
-  "dependencies": {
-    "lodash": "^4.17.21"
-  }
+  "license": "MIT"
 }
